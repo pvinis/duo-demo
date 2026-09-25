@@ -34,9 +34,15 @@ app can talk to each other when placed side by side on the inner display.
 1. `UIHingeInteraction` tells us whether there is a hinge at all and whether it is closed.
    Closed → OUTSIDE (cover display). Open → INSIDE. No hinge → "single screen" (plain iPhone).
    The screen's point size is used as a cross-check.
-2. The window's frame is converted into the screen's coordinate space. If the window is narrower
-   than the screen it is a horizontal split: centre left of the screen centre → LEFT, otherwise
-   RIGHT. If it is shorter it is a vertical split: TOP / BOTTOM. Otherwise FULL.
+2. The window's size against the screen's size says whether it is a half (narrower → horizontal
+   split, shorter → vertical split). A scene's window is always at (0, 0) in its own coordinate
+   space, so the frame alone cannot say *which* half. For that, in order:
+   - the crease: `reservedRegions(kind: .division, options: [.includeInactive])` reports the
+     crease on the window edge that faces the hinge (`x = 456` in a 469-wide left window,
+     `x = 0` in the right one);
+   - the `verticalBarEdge` trait: the system puts the tab bar on the edge away from the crease,
+     so `leading` means left and `trailing` means right (in a left-to-right layout);
+   - the frame's centre, as a last resort.
 3. Safe-area insets, interface orientation and size classes are reported alongside.
 
 ## Architecture
