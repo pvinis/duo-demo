@@ -2,6 +2,8 @@ import SwiftUI
 
 struct HingeTab: View {
     @Environment(DuoEnvironment.self) private var env
+    /// The same hinge as seen through SwiftUI's own modifier, for comparison with the UIKit probe.
+    @State private var swiftUIHinge: DeviceHinge?
 
     private var snapshot: WindowSnapshot { env.snapshot }
     private var angle: Double { snapshot.hingeAngleDegrees ?? 0 }
@@ -39,6 +41,20 @@ struct HingeTab: View {
             .navigationTitle("Hinge")
             .navigationBarTitleDisplayMode(.inline)
         }
+        .onHingeChange { _, context in
+            swiftUIHinge = context.hinge
+        }
+    }
+
+    private var swiftUIHingeLabel: String {
+        guard let h = swiftUIHinge else { return "nil (no hinge)" }
+        let status: String = switch h.status {
+        case .closed: "closed"
+        case .partiallyOpen: "partiallyOpen"
+        case .fullyOpen: "fullyOpen"
+        default: "unknown"
+        }
+        return "\(status), \(Int(h.angle.degrees.rounded()))°"
     }
 
     private var gauge: some View {
@@ -87,6 +103,7 @@ struct HingeTab: View {
                 GridRow { Text("Angle").foregroundStyle(.secondary); Text(snapshot.hingeAngleDegrees.map { String(format: "%.1f°", $0) } ?? "n/a") }
                 GridRow { Text("Panel").foregroundStyle(.secondary); Text(snapshot.panel.rawValue.capitalized) }
                 GridRow { Text("Crease").foregroundStyle(.secondary); Text(snapshot.creaseRelation ?? "none reported") }
+                GridRow { Text("SwiftUI").foregroundStyle(.secondary); Text("onHingeChange → \(swiftUIHingeLabel)") }
             }
             .font(.callout.monospacedDigit())
         }

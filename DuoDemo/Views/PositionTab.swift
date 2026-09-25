@@ -44,7 +44,7 @@ struct PositionTab: View {
     private var details: some View {
         Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 10) {
             row("Panel", snapshot.panel.rawValue.capitalized)
-            row("Placement", snapshot.placement.rawValue.capitalized)
+            row("Placement", "\(snapshot.placement.rawValue.capitalized) (via \(snapshot.placementSource))")
             row("Hinge", hingeLabel)
             row("Orientation", snapshot.orientation)
             row("Window", snapshot.windowFrame.pointsLabel)

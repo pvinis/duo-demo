@@ -44,6 +44,8 @@ struct WindowSnapshot: Equatable {
     var id: String = ""
     var panel: Panel = .unknown
     var placement: Placement = .full
+    /// Which signal decided `placement`.
+    var placementSource: String = "screen frame"
     var hinge: HingeState = .none
     var hingeAngleDegrees: Double? = nil
     var orientation: String = "unknown"
@@ -83,18 +85,31 @@ struct WindowSnapshot: Equatable {
     var activeDivision: RegionInfo? { divisions.first { $0.isActive } }
 
     /// Where this window sits relative to the crease: "spans", "left of", "right of", "above", "below" or nil.
+    ///
+    /// The crease is reported even when it is *inactive* for this window (it then sits on one of
+    /// the window's edges), which is what tells a half-width window which half it is.
     var creaseRelation: String? {
+        guard let side = creaseSide else { return nil }
+        switch side {
+        case .full: return "spans the crease"
+        case .left: return "left of the crease"
+        case .right: return "right of the crease"
+        case .top: return "above the crease"
+        case .bottom: return "below the crease"
+        }
+    }
+
+    /// `.full` when the crease runs through the window, otherwise the half this window occupies.
+    var creaseSide: Placement? {
         guard let d = divisions.first else { return nil }
         let w = windowFrame.width, h = windowFrame.height
-        if d.isActive, d.frame.intersects(CGRect(x: 0, y: 0, width: w, height: h)) { return "spans the crease" }
+        let inside = CGRect(x: 0, y: 0, width: w, height: h).insetBy(dx: 8, dy: 8)
+        if d.isActive || inside.contains(CGPoint(x: d.frame.midX, y: d.frame.midY)) { return .full }
         if d.isHorizontal {
-            if d.frame.midY >= h { return "above the crease" }
-            if d.frame.midY <= 0 { return "below the crease" }
+            return d.frame.midY > h / 2 ? .top : .bottom
         } else {
-            if d.frame.midX >= w { return "left of the crease" }
-            if d.frame.midX <= 0 { return "right of the crease" }
+            return d.frame.midX > w / 2 ? .left : .right
         }
-        return "crease inactive"
     }
 }
 

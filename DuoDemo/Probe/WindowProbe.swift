@@ -109,7 +109,6 @@ final class ProbeView: UIView {
         }
 
         s.panel = panel(hinge: s.hinge, screenSize: s.screenSize)
-        s.placement = placement(window: s.windowFrame, screen: screen.bounds)
 
         s.verticalBarEdge = Self.name(traitCollection.verticalBarEdge)
         s.horizontalSizeClass = Self.name(traitCollection.horizontalSizeClass)
@@ -117,6 +116,8 @@ final class ProbeView: UIView {
 
         s.divisions = window.reservedRegions(kind: .division, options: [.includeInactive]).map { Self.info($0, kind: "division") }
         s.occlusions = window.reservedRegions(kind: .occlusion, options: [.includeInactive]).map { Self.info($0, kind: "occlusion") }
+
+        (s.placement, s.placementSource) = placement(for: s, screen: screen.bounds)
 
         if s.panel == .cover || s.panel == .inner {
             if lastPanel != .unknown, lastPanel != s.panel { foldTransitions += 1 }
@@ -142,15 +143,31 @@ final class ProbeView: UIView {
         }
     }
 
-    private func placement(window: CGRect, screen: CGRect) -> Placement {
+    /// A scene's window is always at (0, 0) in its own coordinate space, so the frame alone only
+    /// says *whether* we are a half, not which one. For that we use, in order of preference:
+    /// 1. the crease: UIKit reports the (inactive) division region on the edge that faces it;
+    /// 2. the vertical bar edge: the system puts the tab bar on the edge away from the crease;
+    /// 3. the frame's centre, which works if a future OS ever reports real screen positions.
+    private func placement(for s: WindowSnapshot, screen: CGRect) -> (Placement, String) {
         let tolerance: CGFloat = 4
-        if window.width < screen.width - tolerance {
-            return window.midX < screen.midX ? .left : .right
+        let window = s.windowFrame
+        let horizontalSplit = window.width < screen.width - tolerance
+        let verticalSplit = !horizontalSplit && window.height < screen.height - tolerance
+        guard horizontalSplit || verticalSplit else { return (.full, "full-size window") }
+
+        if let side = s.creaseSide, side != .full {
+            return (side, "crease region")
         }
-        if window.height < screen.height - tolerance {
-            return window.midY < screen.midY ? .top : .bottom
+        if horizontalSplit {
+            let rtl = traitCollection.layoutDirection == .rightToLeft
+            switch traitCollection.verticalBarEdge {
+            case .leading: return (rtl ? .right : .left, "vertical bar edge")
+            case .trailing: return (rtl ? .left : .right, "vertical bar edge")
+            default: break
+            }
+            return (window.midX < screen.midX ? .left : .right, "screen frame")
         }
-        return .full
+        return (window.midY < screen.midY ? .top : .bottom, "screen frame")
     }
 
     // MARK: - Naming helpers

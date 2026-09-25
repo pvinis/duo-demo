@@ -2,6 +2,9 @@ import SwiftUI
 
 struct LayoutTab: View {
     @Environment(DuoEnvironment.self) private var env
+    @Environment(\.toolbarVerticalEdge) private var toolbarVerticalEdge
+    @Environment(\.horizontalSizeClass) private var hSizeClass
+    @Environment(\.verticalSizeClass) private var vSizeClass
 
     private var snapshot: WindowSnapshot { env.snapshot }
 
@@ -42,7 +45,26 @@ struct LayoutTab: View {
                     }
                 }
 
-                Section("Traits & insets") {
+                Section("SwiftUI's view of the same things") {
+                    GeometryReader { proxy in
+                        let divisions = proxy.reservedRegions(kind: .division, options: [.includeInactive])
+                        let occlusions = proxy.reservedRegions(kind: .occlusion, options: [.includeInactive])
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("proxy.reservedRegions(kind: .division): \(divisions.count) (\(divisions.filter(\.isActive).count) active)")
+                            Text("proxy.reservedRegions(kind: .occlusion): \(occlusions.count)")
+                            ForEach(divisions) { d in
+                                Text("division \(d.frame.pointsLabel) \(d.isActive ? "active" : "inactive")")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .font(.caption.monospacedDigit())
+                    }
+                    .frame(minHeight: 60)
+                    LabeledContent("@Environment(\\.toolbarVerticalEdge)", value: toolbarVerticalEdge.map { $0 == .leading ? "leading" : "trailing" } ?? "nil")
+                    LabeledContent("size classes", value: "\(name(hSizeClass)) × \(name(vSizeClass))")
+                }
+
+                Section("UIKit traits & insets") {
                     LabeledContent("Vertical bar edge", value: snapshot.verticalBarEdge)
                     LabeledContent("Horizontal size class", value: snapshot.horizontalSizeClass)
                     LabeledContent("Vertical size class", value: snapshot.verticalSizeClass)
@@ -75,6 +97,14 @@ struct LayoutTab: View {
         }
         .frame(height: 120)
         .listRowInsets(EdgeInsets())
+    }
+
+    private func name(_ c: UserInterfaceSizeClass?) -> String {
+        switch c {
+        case .compact: "compact"
+        case .regular: "regular"
+        default: "nil"
+        }
     }
 
     /// Which side of the crease a point (in window coordinates) is on.
