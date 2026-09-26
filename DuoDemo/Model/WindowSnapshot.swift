@@ -1,11 +1,34 @@
 import UIKit
 
 /// Which physical panel the window is on.
-enum Panel: String {
-    case cover = "OUTSIDE"
-    case inner = "INSIDE"
-    case single = "SINGLE"
-    case unknown = "UNKNOWN"
+enum Panel {
+    case cover
+    /// The cover display while the phone is open: only a camera-capture accessory scene lives here.
+    case coverWhileOpen
+    case inner
+    case single
+    case unknown
+
+    /// The big word.
+    var word: String {
+        switch self {
+        case .cover, .coverWhileOpen: "OUTSIDE"
+        case .inner: "INSIDE"
+        case .single: "SINGLE"
+        case .unknown: "UNKNOWN"
+        }
+    }
+
+    /// A short lowercase description.
+    var name: String {
+        switch self {
+        case .cover: "outside"
+        case .coverWhileOpen: "outside (inside open)"
+        case .inner: "inside"
+        case .single: "single screen"
+        case .unknown: "unknown"
+        }
+    }
 }
 
 /// Where the window sits on that panel.
@@ -64,7 +87,7 @@ struct WindowSnapshot: Equatable {
 
     /// The word shown in huge letters on the Position tab.
     var primaryWord: String {
-        placement.isHalf ? placement.rawValue : panel.rawValue
+        placement.isHalf ? placement.rawValue : panel.word
     }
 
     /// The smaller line under it.
@@ -72,6 +95,7 @@ struct WindowSnapshot: Equatable {
         var parts: [String] = []
         switch panel {
         case .cover: parts.append("outside (cover display)")
+        case .coverWhileOpen: parts.append("outside, while the inside is open")
         case .inner: parts.append("inside (inner display)")
         case .single: parts.append("single screen")
         case .unknown: parts.append("panel unknown")

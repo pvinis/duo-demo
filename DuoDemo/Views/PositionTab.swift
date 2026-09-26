@@ -43,7 +43,7 @@ struct PositionTab: View {
 
     private var details: some View {
         Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 10) {
-            row("Panel", snapshot.panel.rawValue.capitalized)
+            row("Panel", snapshot.panel.name.capitalized)
             row("Placement", "\(snapshot.placement.rawValue.capitalized) (via \(snapshot.placementSource))")
             row("Hinge", hingeLabel)
             row("Orientation", snapshot.orientation)
@@ -76,7 +76,12 @@ struct PositionTab: View {
         switch snapshot.placement {
         case .left, .top: .blue
         case .right, .bottom: .orange
-        case .full: snapshot.panel == .cover ? .green : .purple
+        case .full:
+            switch snapshot.panel {
+            case .cover: .green
+            case .coverWhileOpen: .teal
+            default: .purple
+            }
         }
     }
 }

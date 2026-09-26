@@ -132,14 +132,15 @@ final class ProbeView: UIView {
     }
 
     private func panel(hinge: HingeState, screenSize: CGSize) -> Panel {
+        // The inner display has roughly twice the area of the cover display.
+        let onSmallPanel = screenSize.width * screenSize.height < 500_000
         switch hinge {
         case .closed: return .cover
-        case .fullyOpen, .partiallyOpen: return .inner
+        case .fullyOpen, .partiallyOpen:
+            // Open, yet our screen is the small one: we are the camera-capture accessory on the cover.
+            return onSmallPanel ? .coverWhileOpen : .inner
         case .none: return .single
-        case .unknown:
-            // Fall back to the panel's size: the inner display has roughly twice the area.
-            let area = screenSize.width * screenSize.height
-            return area > 500_000 ? .inner : .cover
+        case .unknown: return onSmallPanel ? .cover : .inner
         }
     }
 

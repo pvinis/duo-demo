@@ -3,12 +3,14 @@ import SwiftUI
 struct RootView: View {
     @State private var env = DuoEnvironment()
     private let store = SharedStore.shared
+    private let camera = CameraModel.shared
 
     var body: some View {
         TabView(selection: $env.tab) {
             Tab(AppTab.position.title, systemImage: AppTab.position.symbol, value: .position) { PositionTab() }
             Tab(AppTab.sync.title, systemImage: AppTab.sync.symbol, value: .sync) { SyncTab() }
             Tab(AppTab.hinge.title, systemImage: AppTab.hinge.symbol, value: .hinge) { HingeTab() }
+            Tab(AppTab.camera.title, systemImage: AppTab.camera.symbol, value: .camera) { CameraTab() }
             Tab(AppTab.layout.title, systemImage: AppTab.layout.symbol, value: .layout) { LayoutTab() }
             Tab(AppTab.about.title, systemImage: AppTab.about.symbol, value: .about) { AboutTab() }
         }
@@ -17,6 +19,15 @@ struct RootView: View {
         .overlay { PingFlash() }
         .environment(env)
         .environment(store)
+        .sceneAccessory {
+            @Bindable var camera = camera
+            CameraCaptureAccessory(isEnabled: $camera.accessoryEnabled) {
+                OuterAccessoryView()
+            }
+            .onAvailabilityChange { available in
+                camera.accessoryAvailable = available
+            }
+        }
         .onChange(of: store.tabRequests[env.snapshot.id]) { _, requested in
             guard let requested else { return }
             withAnimation { env.tab = requested }

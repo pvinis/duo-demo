@@ -33,6 +33,7 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         ITSAppUsesNonExemptEncryption: false
+        NSCameraUsageDescription: The Camera tab shows a live preview and, on iPhone Duo, mirrors it to the outer display for the person being photographed.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.pvinis.DuoDemo

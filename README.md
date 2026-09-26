@@ -19,6 +19,7 @@ and **RIGHT**.
 | **Position** | Big words: `OUTSIDE` / `INSIDE`, or `LEFT` / `RIGHT` (`TOP` / `BOTTOM` in portrait) when the window is one half of a Split View. Plus how it knows. |
 | **Sync** | A segmented picker, a colour and a slider mirrored across every window; a toggle that is always the *inverse* of the other side; ping the other window (it flashes); send the other window to a tab; open another window. |
 | **Hinge** | Live hinge status and angle drawn as a gauge. Partially open with a horizontal crease (portrait) lays the tab out laptop-style around the crease. |
+| **Camera** | A capture session with preview, flip, shutter and a 3-2-1 countdown. While capturing on the inner display, a **camera-capture scene accessory** puts a second scene on the cover display for the person being photographed: mirrored preview, countdown, a message, the shot they just took, and tap-to-shoot. That scene reports `OUTSIDE`, inside open. |
 | **Layout** | The crease and camera cut-outs as reserved regions, overlaid on the window; which side of the crease this window sits on; which side of the crease you tapped; the vertical tab bar edge; safe areas; size classes. |
 | **About** | Which API backs each trick. |
 
@@ -59,6 +60,23 @@ crease and the readout below it:
 
 <img src="docs/images/laptop-mode.png" width="300">
 
+## Outside while the inside is open
+
+While the app is full screen on the inner display with a running `AVCaptureSession`, the system
+offers to show a second scene of the app on the cover display: `sceneAccessory` with a
+`CameraCaptureAccessory`. It is a separate scene in the same process, so it shares the capture
+session and the store. Its own probe sees an open hinge on a 466 × 678 pt screen and says
+"outside, while the inside is open".
+
+| Inner display (photographer) | Cover display (subject) |
+| --- | --- |
+| <img src="docs/images/camera-tab.png" width="600"> | <img src="docs/images/outer-accessory.png" width="300"> |
+
+The subject sees themselves mirrored, the countdown, a message picked on the inside ("Smile!",
+"Look up here", …), the shot for a couple of seconds after it is taken, and can tap the cover to
+start the countdown themselves. This works in the simulator too: an empty running session is
+enough to make the accessory available (the simulator just has no camera image).
+
 ## Crease and cut-outs
 
 `UIView.reservedRegions(kind:)` (or `GeometryProxy.reservedRegions(kind:)` in SwiftUI) returns the
@@ -75,6 +93,7 @@ draws them over the window and tells you which side of the crease a tap landed o
 | Crease and camera cut-outs | `UIView.reservedRegions(kind:options:)` · SwiftUI `GeometryProxy.reservedRegions(kind:)` |
 | Vertical tab bar edge | `UITraitCollection.verticalBarEdge`, `systemTraitsAffectingVerticalBarEdge` · SwiftUI `@Environment(\.toolbarVerticalEdge)` |
 | Two windows | `UIApplicationSupportsMultipleScenes`, `openWindow`, a shared `@Observable` |
+| Second scene on the cover while capturing | SwiftUI `sceneAccessory`, `CameraCaptureAccessory(isEnabled:)`, `onAvailabilityChange` · UIKit `UISceneAccessory.cameraCapture`, `registerSceneAccessory` |
 | Panel size cross-check | `UIScreen.bounds` (cover 466 × 678 pt, inner 951 × 669 pt) |
 
 ## Run it
@@ -98,5 +117,7 @@ screen, then pick the app again on the other half (it is on the second home-scre
 - `DuoDemo/Model/SharedStore.swift`: state shared by all windows of the process.
 - `DuoDemo/Probe/WindowProbe.swift`: the one UIKit view that reads the hinge, reserved regions,
   traits and geometry and publishes a `WindowSnapshot`.
+- `DuoDemo/Model/CameraModel.swift`: the capture session (off the main actor) and the camera / accessory state.
+- `DuoDemo/Views/OuterAccessoryView.swift`: what the cover display shows while capturing.
 - `DuoDemo/Views/*`: the tabs.
 - `docs/design.md`: the design brief.

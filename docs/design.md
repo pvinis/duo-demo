@@ -28,6 +28,10 @@ app can talk to each other when placed side by side on the inner display.
 - **Vertical bar**: the new `verticalBarEdge` trait (iOS 27.1) says whether the system moved the
   tab bar to the leading or trailing edge.
 - **Fold counter**: how many times this window transitioned between cover and inner panels.
+- **Outside while the inside is open**: a `CameraCaptureAccessory` scene on the cover display
+  while the Camera tab has a running capture session. Mirrored preview, countdown, message,
+  post-shot review and tap-to-shoot for the subject. Its probe reports the panel as
+  `coverWhileOpen` (open hinge but a 466 × 678 screen).
 
 ## How position is derived
 

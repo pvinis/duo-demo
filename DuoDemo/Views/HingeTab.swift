@@ -101,7 +101,7 @@ struct HingeTab: View {
             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
                 GridRow { Text("Status").foregroundStyle(.secondary); Text(snapshot.hinge.rawValue) }
                 GridRow { Text("Angle").foregroundStyle(.secondary); Text(snapshot.hingeAngleDegrees.map { String(format: "%.1f°", $0) } ?? "n/a") }
-                GridRow { Text("Panel").foregroundStyle(.secondary); Text(snapshot.panel.rawValue.capitalized) }
+                GridRow { Text("Panel").foregroundStyle(.secondary); Text(snapshot.panel.name.capitalized) }
                 GridRow { Text("Crease").foregroundStyle(.secondary); Text(snapshot.creaseRelation ?? "none reported") }
                 GridRow { Text("SwiftUI").foregroundStyle(.secondary); Text("onHingeChange → \(swiftUIHingeLabel)") }
             }
